@@ -1,0 +1,16 @@
+#!/usr/bin/env node
+
+(function(){
+  var zmq = require('zmq');
+
+  var service = zmq.socket('rep');
+  service.on('message', function(){
+    var frames = Array.apply(null, arguments);
+    console.log("Service received: %s", frames);
+    frames[1] = "pong";
+    service.send(frames);
+  });
+  service.bindSync('ipc://socket');
+
+  console.log("Started server");
+})();

@@ -1,0 +1,19 @@
+#!/usr/bin/env node
+
+(function(){
+  var zmq = require('zmq');
+
+  var number = 1;
+  var client = zmq.socket('req');
+  client.on('message', function(){
+    var frames = Array.apply(null, arguments);
+    console.log("Client received: %s", frames);
+    setTimeout(function(){
+      client.send([number++, "ping"]);
+    }, 500);
+  });
+  client.connect('ipc://socket');
+
+  console.log("Started client");
+  client.send([number++, "ping"]);
+})();
