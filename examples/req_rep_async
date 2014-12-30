@@ -1,0 +1,29 @@
+#!/usr/bin/env node
+
+(function(){
+  var zmq = require('zmq');
+
+  var server = zmq.socket('dealer');
+  server.on('message', function(){
+    var frames = Array.prototype.slice.call(arguments);
+    console.log("Server received: %s", frames);
+    frames[1] = "pong";
+    server.send(frames);
+  });
+  server.bindSync('inproc://socket');
+
+  // ASYNC CLIENT
+  var client = zmq.socket('dealer');
+  client.on('message', function(){
+    var frames = Array.prototype.slice.call(arguments);
+    console.log("Client received: %s", frames);
+  });
+  client.connect('inproc://socket');
+  var number = 1;
+
+  for(var i = 0; i < 10; ++i){
+    var frames = [number++, "ping"];
+    console.log("Client sending %s", frames);
+    client.send(frames);
+  }
+})();
