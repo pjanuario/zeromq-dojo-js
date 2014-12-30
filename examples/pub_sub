@@ -1,0 +1,36 @@
+#!/usr/bin/env node
+
+var zmq = require('zmq');
+
+var subscriber = zmq.socket('sub');
+subscriber.on('message', function(reply) {
+  console.log('Sub: Received message: ', reply.toString());
+});
+subscriber.connect('tcp://localhost:8688');
+subscriber.subscribe('');
+
+var subscriber2 = zmq.socket('sub');
+subscriber2.on('message', function(reply) {
+  console.log('Sub2: Received message: ', reply.toString());
+});
+
+var publisher = zmq.socket('pub');
+publisher.bind('tcp://*:8688', function(err) {
+  if(err)
+    console.log(err)
+  else
+    console.log("Listening on 8688...")
+});
+
+var i = 1;
+
+setInterval(function(){
+  publisher.send(["/appX/logY", 'Hello '+i+'...']);
+  publisher.send('Something '+i+'...');
+  i += 1;
+}, 1000);
+
+setTimeout(function(){
+  subscriber2.connect('tcp://localhost:8688');
+  subscriber2.subscribe('/appX');
+}, 2000);
