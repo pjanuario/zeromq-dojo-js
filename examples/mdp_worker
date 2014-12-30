@@ -1,0 +1,29 @@
+#!/usr/bin/env node
+
+var zmq = require('zmq')
+  , socket = zmq.socket('dealer');
+
+var address = 'tcp://127.0.0.1:5560';
+socket.identity = "worker";
+socket.connect(address);
+
+console.log('PING connected to %s with id %s',
+  address, socket.identity);
+
+socket.on('message', function(){
+  var frames = Array.apply(null, arguments);
+  console.log("received: %s", frames);
+
+  frames[4] = "PONG";
+  console.log("sending: %s", frames);
+
+  socket.send(frames);
+});
+
+var ready = [
+  "MDPW01",
+  "READY",
+  "worker"
+];
+console.log("sending: %s", ready);
+socket.send(ready);

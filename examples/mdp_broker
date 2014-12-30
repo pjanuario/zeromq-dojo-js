@@ -1,0 +1,46 @@
+#!/usr/bin/env node
+
+var zmq      = require('zmq')
+  , frontend = zmq.socket('router')
+  , backend  = zmq.socket('router');
+
+
+frontendAddress = 'tcp://*:5559';
+backendAddress = 'tcp://*:5560';
+
+console.log("Async Broker");
+console.log('Frontend connected to %s', frontendAddress);
+console.log('Backend connected to %s', backendAddress);
+
+frontend.bindSync(frontendAddress);
+backend.bindSync(backendAddress);
+
+console.log("Waiting for messages...");
+
+frontend.on('message', function() {
+  var frames = Array.apply(null, arguments);
+  console.log("frontend received: %s", frames);
+
+  // sid resolution and append frame at begining
+  frames.unshift("worker");
+
+  console.log("frontend from: %s to: %s sending: %s", frames[1], frames[0], frames);
+  backend.send(frames);
+});
+
+backend.on('message', function() {
+  var frames = Array.apply(null, arguments);
+  console.log("backend received: %s", frames);
+
+  // discard routing addresses
+  if(frames[2] == "READY"){
+    console.log("READY!");
+    return;
+  }
+
+  // remove worker identity and let client identity on pos 0
+  var from = frames.shift();
+
+  console.log("backend from: %s to: %s sending: %s", from, frames[0], frames);
+  frontend.send(frames);
+});

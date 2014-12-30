@@ -1,0 +1,30 @@
+#!/usr/bin/env node
+
+var zmq = require('zmq')
+  , socket = zmq.socket('dealer');
+
+var address = 'tcp://127.0.0.1:5559';
+socket.identity = "producer";
+socket.connect(address);
+console.log('Producer bound to %s', address);
+
+var ping = [
+  "MDPC01",
+  "REQ",
+  "worker",
+  "PING"
+];
+
+socket.on('message', function(){
+  var frames = Array.apply(null, arguments);
+  console.log("received: %s", frames);
+
+  setTimeout(function(){
+    console.log("sending: %s", ping);
+    socket.send(ping);
+  }, 2000);
+
+});
+
+console.log("sending: %s", ping);
+socket.send(ping);
